@@ -44,14 +44,14 @@ namespace CoffeeMugProject.Controllers
             var addedProduct = _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(Get), new { id = product.ID }, product);
+            return CreatedAtAction(nameof(Get), new { id = product.ID });
         }
         
         // PUT: api/Product/5
         [HttpPut("{id}")]
-        public async Task<ActionResult<Guid>> Put(Product product)
+        public async Task<ActionResult<Guid>> Put(Guid id, Product product)
         {
-            var productToChange = await _context.Products.FindAsync(product.ID);
+            var productToChange = await _context.Products.FindAsync(id);
             if(productToChange == null)
             {
                 return NotFound();
@@ -61,7 +61,7 @@ namespace CoffeeMugProject.Controllers
             productToChange.Quantity = product.Quantity;
 
             await _context.SaveChangesAsync();
-            return Ok(product.ID);
+            return Ok(productToChange);
         }
 
         // DELETE: api/Product/5
