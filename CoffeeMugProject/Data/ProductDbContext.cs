@@ -10,6 +10,6 @@ namespace CoffeeMugProject.Data
         {
         }
 
-        public DbSet<Product> Products { get; set; }
+        public DbSet<Product> Products => Set<Product>();
     }
 }

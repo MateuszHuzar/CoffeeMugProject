@@ -1,7 +1,7 @@
-﻿using CoffeeMugProject.Data;
+﻿using CoffeeMugProject.Dto;
+using CoffeeMugProject.Interfaces;
 using CoffeeMugProject.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CoffeeMugProject.Controllers
 {
@@ -9,75 +9,82 @@ namespace CoffeeMugProject.Controllers
     [Route("api/[controller]")]
     public class ProductController : ControllerBase
     {
-        private readonly ProductDbContext _context;
+        private readonly IProductService _service;
 
-        public ProductController(ProductDbContext context)
+        public ProductController(IProductService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/Product
         [HttpGet]
-        public async Task<ActionResult<List<Product>>> Get()
+        public async Task<ActionResult<List<ProductDto>>> Get()
         {
-            return Ok(await _context.Products.ToListAsync());
+            return Ok((await _service.GetAllProducts()).Select(p => ProductToDto(p)));
         }
 
         // GET: api/Product/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> Get(Guid id)
+        public async Task<ActionResult<ProductDto>> Get(Guid id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _service.GetProductById(id);
 
             if(product == null)
             {
                 return NotFound();
             }
 
-            return Ok(product);
+            return Ok(ProductToDto(product));
         }
 
         // POST: api/Product
         [HttpPost]
-        public async Task<ActionResult<Product>> Post(Product product)
+        public async Task<ActionResult> Post(ProductPostDto product)
         {
-            var addedProduct = _context.Products.Add(product);
-            await _context.SaveChangesAsync();
+            var newproductId = await _service.AddProduct(product);
 
-            return CreatedAtAction(nameof(Get), new { id = product.ID });
+            return CreatedAtAction(nameof(Get), new { id = newproductId });
+
         }
-        
+
         // PUT: api/Product/5
         [HttpPut("{id}")]
-        public async Task<ActionResult<Guid>> Put(Guid id, Product product)
+        public async Task<ActionResult<ProductDto>> Put(Guid id, ProductEditDto product)
         {
-            var productToChange = await _context.Products.FindAsync(id);
+            var productToChange = await _service.GetProductById(id);
             if(productToChange == null)
             {
                 return NotFound();
             }
 
-            productToChange.Description = product.Description;
-            productToChange.Quantity = product.Quantity;
-
-            await _context.SaveChangesAsync();
-            return Ok(productToChange);
+            return Ok(ProductToDto(await _service.UpdateProduct(id, product)));
         }
 
         // DELETE: api/Product/5
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(Guid id)
         {
-            var productForDelete = await _context.Products.FindAsync(id);
-            if(productForDelete == null)
+            var productForDelete = await _service.GetProductById(id);
+            if (productForDelete == null)
             {
                 return NotFound();
             }
-
-            _context.Products.Remove(productForDelete);
-            await _context.SaveChangesAsync();
+            await _service.DeleteProduct(id);
 
             return NoContent();
+        }
+
+        private static ProductDto ProductToDto(Product product)
+        {
+            return new ProductDto()
+            {
+                ID = product.ID,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                Number = product.Number,
+                Quantity = product.Quantity
+            };
         }
     }
 }

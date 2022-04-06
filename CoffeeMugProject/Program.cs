@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using CoffeeMugProject.Data;
+using CoffeeMugProject.Services;
+using CoffeeMugProject.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ProductDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("defaultconnection")));
+builder.Services.AddScoped<IProductService, ProductService>();
 
 var app = builder.Build();
 
